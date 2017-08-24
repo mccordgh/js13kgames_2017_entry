@@ -28,46 +28,92 @@ export class EntityManager {
   }
 
   render(_g) {
+    const player = this.getPlayer();
+
     //Iterate through every entity, check whether they are currently in the camera view.
     //If they are then draw them, if not and they are a monster draw offscreen monster pointer
     entities.forEach(function(e){
-      let checkRight = e.handler.getWidth() + e.handler.getGameCamera().getxOffset();
-      let checkBottom = e.handler.getHeight() + e.handler.getGameCamera().getyOffset();
-      let checkLeft = e.handler.getGameCamera().getxOffset() - e.width;
-      let checkTop = e.handler.getGameCamera().getyOffset() - e.height;
-      let scaleX = 0, scaleY = 0, marker;
-      let offScreen = false;
+      const cameraXOffset = e.handler.getGameCamera().getxOffset();
+      const cameraYOffset = e.handler.getGameCamera().getyOffset();
 
-      _g.font = "64px Arial Bold";
-      _g.fillStyle = "white";
+      let checkRight = e.handler.getWidth() + cameraXOffset;
+      let checkBottom = e.handler.getHeight() + cameraYOffset;
+      let checkLeft = cameraXOffset - e.width;
+      let checkTop = cameraYOffset - e.height;
 
-      if (e.x > checkRight){
-        scaleX = e.handler.getWidth() - 55;
-        scaleY = e.y - e.handler.getGameCamera().getyOffset();
-        offScreen = true;
-        marker = ">";
-      }
-      if (e.y > checkBottom){
-        scaleX = e.x - e.handler.getGameCamera().getxOffset();
-        scaleY = e.handler.getHeight() - 25;
-        offScreen = true;
-        marker = "V";
-      }
-      if (e.x < checkLeft){
-        scaleX = 10;
-        scaleY = e.y - e.handler.getGameCamera().getyOffset();
-        offScreen = true;
-        marker = "<";
-      }
-      if (e.y < checkTop) {
-        scaleX = e.x - e.handler.getGameCamera().getxOffset();
-        scaleY = 65;
-        offScreen = true;
-        marker = "/\\";
-      }
+      let scaleX = 0, scaleY = 0, marker = null;
+      const offScreen = (e.y < checkTop || e.x > checkRight || e.y > checkBottom || e.x < checkLeft);
 
-      if (offScreen && e.type === 'monster')
-        _g.fillText(marker, scaleX, scaleY);
+      const wiggle = 12; //giving a little extra area to the check below
+      const alertDistance = e.handler.getWidth();
+
+      // this.x - this.handler.getGameCamera().getxOffset(), this.y - this.handler.getGameCamera().getyOffset()
+      const alertArea = new Rectangle(
+        player.x - alertDistance - cameraXOffset,
+        player.y - alertDistance - cameraYOffset,
+        alertDistance * 2 + player.width,
+        alertDistance * 2 + player.height,
+        );
+
+      // console.log('player', player.x, player.y);
+      // console.log('rect', alertArea.x, alertArea.y)
+
+      // _g.fillStyle = 'pink';
+      // _g.fillRect(alertArea.x, alertArea.y, alertArea.width, alertArea.height);
+
+      //check if creature is near enough to alert player
+      // const alert = () => (
+      //   (e.y + wiggle - player.y > -alertDistance) &&  ||
+      //   (e.y - player.y < alertDistance) ||
+      //     (e.x - player.x > -alertDistance) ||
+      //       (e.x - player.d < alertDistance)
+      // );
+      // if (alert) {
+      
+        _g.font = "64px Arial Bold";
+        _g.fillStyle = "white";
+
+        // if creature is directly above player
+        if (e.x - wiggle < player.x && (e.x + e.width + wiggle) > player.x + player.width) {
+          scaleX = 65;
+          scaleY = 65;
+          marker = "/\\";
+        }
+      // }
+      // }
+      // if (e.y < checkTop || e.x > checkRight || e.y > checkBottom || e.x < checkLeft) {
+      //   offScreen = true;
+      //
+      //   if (e.y )
+      // }
+
+      // if (e.x > checkRight){
+      //   scaleX = e.handler.getWidth() - 55;
+      //   scaleY = e.y - cameraYOffset;
+      //   // offScreen = true;
+      //   marker = ">";
+      // }
+      // if (e.y > checkBottom){
+      //   scaleX = e.x - cameraXOffset;
+      //   scaleY = e.handler.getHeight() - 25;
+      //   // offScreen = true;
+      //   marker = "V";
+      // }
+      // if (e.x < checkLeft){
+      //   scaleX = 10;
+      //   scaleY = e.y - cameraYOffset;
+      //   // offScreen = true;
+      //   marker = "<";
+      // }
+      // if (e.y < checkTop) {
+      //   scaleX = e.x - cameraXOffset;
+      //   scaleY = 65;
+      //   // offScreen = true;
+      //   marker = "/\\";
+      // }
+
+      if (e.type === 'monster' && marker)
+        _g.fillText(marker, cameraXOffset + scaleX, cameraYOffset + scaleY);
 
       if (!offScreen)
         e.render(_g);
